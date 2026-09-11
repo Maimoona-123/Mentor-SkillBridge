@@ -1,11 +1,21 @@
 'use client'
 import { useState } from "react";
 import { UserIcon, MailIcon, CameraIcon } from "lucide-react";
-import DashboardSidebar from "./StudentDashboard";
+import DashboardSidebar from "../../components/DashboardSidebar";
+import { useAuth } from "../../context/AuthContext";
 
 const allInterests = ["React", "Node.js", "Python", "UI/UX", "Firebase", "Machine Learning", "MongoDB", "DevOps"];
 
+const getInitials = (name: string) =>
+    name
+        .split(" ")
+        .map((word) => word[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase();
+
 export default function StudentProfile() {
+    const { currentUser } = useAuth();
     const [selectedInterests, setSelectedInterests] = useState<string[]>(["React", "Firebase"]);
 
     const toggleInterest = (interest: string) => {
@@ -25,23 +35,21 @@ export default function StudentProfile() {
                     <h1 className="text-2xl font-semibold text-white">My Profile</h1>
                     <p className="text-slate-400 mt-1 text-sm">Update your details and interests.</p>
 
-                    {/* Avatar */}
                     <div className="flex items-center gap-5 mt-8">
                         <div className="relative">
                             <div className="size-20 rounded-full bg-pink-600 flex items-center justify-center text-white font-semibold text-2xl">
-                                MU
+                                {currentUser ? getInitials(currentUser.name) : "?"}
                             </div>
                             <button className="absolute -bottom-1 -right-1 size-7 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center hover:bg-slate-700 transition">
                                 <CameraIcon className="size-3.5 text-slate-300" />
                             </button>
                         </div>
                         <div>
-                            <p className="text-white font-medium">Maria Usman</p>
-                            <p className="text-slate-500 text-sm">Student · Multan, Pakistan</p>
+                            <p className="text-white font-medium">{currentUser?.name || "Guest"}</p>
+                            <p className="text-slate-500 text-sm">Student</p>
                         </div>
                     </div>
 
-                    {/* Form */}
                     <div className="mt-10 space-y-5">
                         <div>
                             <p className="mb-2 text-sm font-medium text-slate-200">Full name</p>
@@ -49,7 +57,7 @@ export default function StudentProfile() {
                                 <UserIcon className="size-4.5 text-slate-500" />
                                 <input
                                     type="text"
-                                    defaultValue="Maria Usman"
+                                    defaultValue={currentUser?.name || ""}
                                     className="w-full py-3 outline-none bg-transparent text-white text-sm"
                                 />
                             </div>
@@ -61,7 +69,7 @@ export default function StudentProfile() {
                                 <MailIcon className="size-4.5 text-slate-500" />
                                 <input
                                     type="email"
-                                    defaultValue="maria.usman@email.com"
+                                    defaultValue={currentUser?.email || ""}
                                     className="w-full py-3 outline-none bg-transparent text-white text-sm"
                                 />
                             </div>
@@ -71,8 +79,8 @@ export default function StudentProfile() {
                             <p className="mb-2 text-sm font-medium text-slate-200">About you</p>
                             <textarea
                                 rows={4}
-                                defaultValue="CS student learning full-stack web development. Trying to get better at React and Firebase."
-                                className="w-full p-3.5 rounded-lg border border-slate-700 bg-slate-900/50 focus:border-pink-500 outline-none text-white text-sm resize-none transition"
+                                placeholder="Tell mentors a bit about yourself and what you're learning"
+                                className="w-full p-3.5 rounded-lg border border-slate-700 bg-slate-900/50 focus:border-pink-500 outline-none text-white text-sm resize-none transition placeholder:text-slate-600"
                             />
                         </div>
 

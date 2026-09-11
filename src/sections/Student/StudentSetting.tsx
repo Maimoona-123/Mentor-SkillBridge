@@ -1,7 +1,7 @@
 'use client'
 import { useState } from "react";
 import { LockIcon, BellIcon, Trash2Icon } from "lucide-react";
-import DashboardSidebar from "./StudentDashboard";
+import DashboardSidebar from "../../components/DashboardSidebar";
 
 export default function StudentSettings() {
     const [emailNotif, setEmailNotif] = useState(true);

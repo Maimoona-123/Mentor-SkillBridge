@@ -8,15 +8,16 @@ import Footer from "./components/Footer";
 import "./globals.css";
 import LenisScroll from "./components/LenisScroll";
 import MentorProfile from "./sections/Mentor/MentorProfile";
-import StudentDashboard from "./sections/StudentDashboard";
+import StudentDashboard from "./sections/Student/StudentDashboard";
 import MentorDashboard from "./sections/Mentor/MentorDashboard";
-import StudentProfile from "./sections/StudentProfile";
-import StudentSettings from "./sections/StudentSetting";
-import BookingConfirmation from "./sections/BookingConfirmation";
+import StudentProfile from "./sections/Student/StudentProfile";
+import StudentSettings from "./sections/Student/StudentSetting";
+import BookingConfirmation from "./sections/Student/BookingConfirmation";
 import MentorRequests from "./sections/Mentor/MentorRequests";
 import MentorAvailability from "./sections/Mentor/MentorAvailability";
 import MentorProfileEdit from "./sections/Mentor/MentorProfileEdit";
 import MentorSettings from "./sections/Mentor/MentorSettings";
+import StudentSessions from "./sections/Student/Studentsessions";
 
 export default function App() {
     return (
@@ -39,6 +40,8 @@ export default function App() {
                 <Route path="/mentor-dashboard/availability" element={<MentorAvailability />} />
                 <Route path="/mentor-dashboard/profile" element={<MentorProfileEdit />} />
                 <Route path="/mentor-dashboard/settings" element={<MentorSettings />} />
+
+                <Route path="/dashboard/sessions" element={<StudentSessions />} />
             </Routes>
             <Footer />
         </>
