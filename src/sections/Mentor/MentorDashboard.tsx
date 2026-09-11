@@ -8,7 +8,8 @@ import {
     XIcon,
     ClockIcon,
 } from "lucide-react";
-import MentorSidebar from "../components/MentorSidebar";
+import MentorSidebar from "../../components/MentorSidebar";
+import { useAuth } from "../../context/AuthContext";
 
 const requests = [
     {
@@ -38,7 +39,10 @@ const upcomingSessions = [
 ];
 
 export default function MentorDashboard() {
+    const { currentUser } = useAuth();
     const [pendingRequests, setPendingRequests] = useState(requests);
+
+    const firstName = currentUser?.name?.split(" ")[0] || "there";
 
     const handleAccept = (student: string) => {
         setPendingRequests((prev) => prev.filter((r) => r.student !== student));
@@ -56,7 +60,7 @@ export default function MentorDashboard() {
                 <div className="absolute top-0 -z-10 left-1/3 size-96 bg-pink-600/20 blur-[150px] rounded-full" />
 
                 <div className="max-w-4xl">
-                    <h1 className="text-2xl font-semibold text-white">Welcome back, Ayesha 👋</h1>
+                    <h1 className="text-2xl font-semibold text-white">Welcome back, {firstName} </h1>
                     <p className="text-slate-400 mt-1 text-sm">Here's what's happening with your mentees.</p>
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-8">

@@ -1,12 +1,31 @@
-import { MenuIcon, XIcon } from "lucide-react";
+import { MenuIcon, XIcon, LogOutIcon } from "lucide-react";
 import { useState } from "react";
 import { motion } from "motion/react";
 import { navlinks } from "../data/navlinks";
 import type { INavLink } from "../types";
-import { NavLink, Link } from "react-router-dom";
+import { NavLink, Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+
+const getInitials = (name: string) =>
+    name
+        .split(" ")
+        .map((word) => word[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase();
 
 export default function Navbar() {
     const [isOpen, setIsOpen] = useState(false);
+    const navigate = useNavigate();
+    const { currentUser, logout } = useAuth();
+
+    const handleLogout = async () => {
+        await logout();
+        setIsOpen(false);
+        navigate("/");
+    };
+
+    const dashboardPath = currentUser?.role === "mentor" ? "/mentor-dashboard" : "/dashboard";
 
     return (
         <>
@@ -29,18 +48,41 @@ export default function Navbar() {
                 </div>
 
                 <div className="hidden md:flex items-center gap-4">
-                    <Link
-                        to="/login"
-                        className="px-6 py-2.5 bg-pink-600 hover:bg-pink-700 active:scale-95 transition-all rounded-full"
-                    >
-                        Log in
-                    </Link>
-                    <Link
-                        to="/signup"
-                        className="px-6 py-2.5 bg-pink-600 hover:bg-pink-700 active:scale-95 transition-all rounded-full"
-                    >
-                        Find a Mentor
-                    </Link>
+                    {currentUser ? (
+                        <>
+                            <Link
+                                to={dashboardPath}
+                                className="flex items-center gap-2.5 pl-1.5 pr-4 py-1.5 rounded-full border border-slate-700 hover:border-pink-600 transition"
+                            >
+                                <span className="size-7 rounded-full bg-pink-600 flex items-center justify-center text-white text-xs font-semibold">
+                                    {getInitials(currentUser.name)}
+                                </span>
+                                <span className="text-sm font-medium">{currentUser.name}</span>
+                            </Link>
+                            <button
+                                onClick={handleLogout}
+                                className="size-9 rounded-full border border-slate-700 hover:bg-slate-800 flex items-center justify-center transition"
+                                title="Log out"
+                            >
+                                <LogOutIcon className="size-4" />
+                            </button>
+                        </>
+                    ) : (
+                        <>
+                            <Link
+                                to="/login"
+                                className="px-6 py-2.5 bg-pink-600 hover:bg-pink-700 active:scale-95 transition-all rounded-full"
+                            >
+                                Log in
+                            </Link>
+                            <Link
+                                to="/signup"
+                                className="px-6 py-2.5 bg-pink-600 hover:bg-pink-700 active:scale-95 transition-all rounded-full"
+                            >
+                                Find a Mentor
+                            </Link>
+                        </>
+                    )}
                 </div>
 
                 <button onClick={() => setIsOpen(true)} className="md:hidden">
@@ -54,13 +96,30 @@ export default function Navbar() {
                         {link.name}
                     </NavLink>
                 ))}
-                <Link
-                    to="/login"
-                    onClick={() => setIsOpen(false)}
-                    className="px-6 py-2.5 bg-pink-600 hover:bg-pink-700 active:scale-95 transition-all rounded-full text-white text-base"
-                >
-                    Log in
-                </Link>
+
+                {currentUser ? (
+                    <>
+                        <Link
+                            to={dashboardPath}
+                            onClick={() => setIsOpen(false)}
+                            className="px-6 py-2.5 bg-pink-600 hover:bg-pink-700 active:scale-95 transition-all rounded-full text-white text-base"
+                        >
+                            {currentUser.name}
+                        </Link>
+                        <button onClick={handleLogout} className="text-slate-400 text-base">
+                            Log out
+                        </button>
+                    </>
+                ) : (
+                    <Link
+                        to="/login"
+                        onClick={() => setIsOpen(false)}
+                        className="px-6 py-2.5 bg-pink-600 hover:bg-pink-700 active:scale-95 transition-all rounded-full text-white text-base"
+                    >
+                        Log in
+                    </Link>
+                )}
+
                 <button onClick={() => setIsOpen(false)} className="active:ring-3 active:ring-white aspect-square size-10 p-1 items-center justify-center bg-pink-600 hover:bg-pink-700 transition text-white rounded-md flex">
                     <XIcon />
                 </button>

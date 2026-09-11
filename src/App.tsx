@@ -2,17 +2,21 @@ import { Route, Routes } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import SignUp from "./sections/Signup";
 import Login from "./sections/Login";
-import BrowseMentors from "./sections/BrowseMentors";
+import BrowseMentors from "./sections/Mentor/BrowseMentors";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import "./globals.css";
 import LenisScroll from "./components/LenisScroll";
-import MentorProfile from "./sections/MentorProfile";
+import MentorProfile from "./sections/Mentor/MentorProfile";
 import StudentDashboard from "./sections/StudentDashboard";
-import MentorDashboard from "./sections/MentorDashboard";
+import MentorDashboard from "./sections/Mentor/MentorDashboard";
 import StudentProfile from "./sections/StudentProfile";
 import StudentSettings from "./sections/StudentSetting";
 import BookingConfirmation from "./sections/BookingConfirmation";
+import MentorRequests from "./sections/Mentor/MentorRequests";
+import MentorAvailability from "./sections/Mentor/MentorAvailability";
+import MentorProfileEdit from "./sections/Mentor/MentorProfileEdit";
+import MentorSettings from "./sections/Mentor/MentorSettings";
 
 export default function App() {
     return (
@@ -30,6 +34,11 @@ export default function App() {
                 <Route path="/dashboard/settings" element={<StudentSettings />} />
                 <Route path="/mentor-dashboard" element={<MentorDashboard />} />
                 <Route path="/booking" element={<BookingConfirmation />} />
+
+                <Route path="/mentor-dashboard/requests" element={<MentorRequests />} />
+                <Route path="/mentor-dashboard/availability" element={<MentorAvailability />} />
+                <Route path="/mentor-dashboard/profile" element={<MentorProfileEdit />} />
+                <Route path="/mentor-dashboard/settings" element={<MentorSettings />} />
             </Routes>
             <Footer />
         </>
