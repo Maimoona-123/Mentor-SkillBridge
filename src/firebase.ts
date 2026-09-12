@@ -1,9 +1,7 @@
-// @ts-ignore Firebase package types are unavailable until the dependency is installed.
 import { initializeApp } from "firebase/app";
-// @ts-ignore Firebase package types are unavailable until the dependency is installed.
 import { getAuth } from "firebase/auth";
-// @ts-ignore Firebase package types are unavailable until the dependency is installed.
 import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAoMugVPCSLdoPCfDFweSfsHMs5mBlvBzA",
@@ -15,8 +13,8 @@ const firebaseConfig = {
   measurementId: "G-XGKY1D1RV4"
 };
 
-
 const app = initializeApp(firebaseConfig);
- 
+
 export const auth = getAuth(app);
 export const db = getFirestore(app);
+export const storage = getStorage(app);

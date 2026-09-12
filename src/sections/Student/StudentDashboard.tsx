@@ -1,59 +1,67 @@
 'use client'
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { VideoIcon, ClockIcon, CheckCircle2Icon, UserIcon } from "lucide-react";
 import { Link } from "react-router-dom";
+import { collection, query, where, onSnapshot } from "firebase/firestore";
 import DashboardSidebar from "../../components/DashboardSidebar";
 import { useAuth } from "../../context/AuthContext";
+import { db } from "../../firebase";
 
-const sessions = [
-    {
-        mentor: "Ayesha Zafar",
-        topic: "React state management",
-        date: "8 Sep, 4:00 PM",
-        status: "Confirmed",
-        initials: "AZ",
-        color: "bg-pink-600",
-    },
-    {
-        mentor: "Hamza Malik",
-        topic: "Node.js API design",
-        date: "10 Sep, 5:00 PM",
-        status: "Pending",
-        initials: "HM",
-        color: "bg-violet-600",
-    },
-    {
-        mentor: "Sara Khan",
-        topic: "Portfolio review",
-        date: "2 Sep, 6:00 PM",
-        status: "Completed",
-        initials: "SK",
-        color: "bg-emerald-600",
-    },
-    {
-        mentor: "Bilal Ahmed",
-        topic: "ML project debugging",
-        date: "28 Aug, 3:00 PM",
-        status: "Completed",
-        initials: "BA",
-        color: "bg-amber-600",
-    },
-];
+const avatarColors = ["bg-pink-600", "bg-violet-600", "bg-emerald-600", "bg-amber-600", "bg-sky-600"];
+
+const getInitials = (name: string) =>
+    name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+
+interface Booking {
+    id: string;
+    mentorName: string;
+    topic: string;
+    day: string;
+    date: string;
+    time: string;
+    status: string;
+}
 
 const statusStyles: Record<string, string> = {
-    Confirmed: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",
-    Pending: "bg-amber-500/10 text-amber-400 border-amber-500/30",
-    Completed: "bg-slate-500/10 text-slate-400 border-slate-500/30",
+    confirmed: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",
+    pending: "bg-amber-500/10 text-amber-400 border-amber-500/30",
+    completed: "bg-slate-500/10 text-slate-400 border-slate-500/30",
+    declined: "bg-red-500/10 text-red-400 border-red-500/30",
 };
 
 export default function StudentDashboard() {
     const { currentUser } = useAuth();
     const [sessionFilter, setSessionFilter] = useState<"upcoming" | "past">("upcoming");
+    const [bookings, setBookings] = useState<Booking[]>([]);
+    const [loading, setLoading] = useState(true);
 
     const firstName = currentUser?.name?.split(" ")[0] || "there";
 
-    const filtered = sessions.filter((s) =>
-        sessionFilter === "upcoming" ? s.status !== "Completed" : s.status === "Completed"
+    useEffect(() => {
+        if (!currentUser) return;
+        const q = query(collection(db, "bookings"), where("studentId", "==", currentUser.uid));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const results: Booking[] = snapshot.docs.map((d) => ({
+                id: d.id,
+                mentorName: d.data().mentorName || "Unknown mentor",
+                topic: d.data().topic || "",
+                day: d.data().day || "",
+                date: d.data().date || "",
+                time: d.data().time || "",
+                status: d.data().status || "pending",
+            }));
+            setBookings(results);
+            setLoading(false);
+        });
+        return () => unsubscribe();
+    }, [currentUser]);
+
+    const upcomingCount = bookings.filter((b) => b.status === "confirmed").length;
+    const completedCount = bookings.filter((b) => b.status === "completed").length;
+    const mentorsMetCount = new Set(bookings.map((b) => b.mentorName)).size;
+
+    const filtered = bookings.filter((b) =>
+        sessionFilter === "upcoming" ? b.status === "pending" || b.status === "confirmed" : b.status === "completed"
     );
 
     return (
@@ -73,21 +81,21 @@ export default function StudentDashboard() {
                                 <ClockIcon className="size-4" />
                                 Upcoming sessions
                             </div>
-                            <p className="text-3xl font-semibold text-white mt-2">2</p>
+                            <p className="text-3xl font-semibold text-white mt-2">{upcomingCount}</p>
                         </div>
                         <div className="border border-slate-800 rounded-xl p-5 bg-slate-950/60">
                             <div className="flex items-center gap-2 text-slate-400 text-sm">
                                 <CheckCircle2Icon className="size-4" />
                                 Sessions completed
                             </div>
-                            <p className="text-3xl font-semibold text-white mt-2">6</p>
+                            <p className="text-3xl font-semibold text-white mt-2">{completedCount}</p>
                         </div>
                         <div className="border border-slate-800 rounded-xl p-5 bg-slate-950/60">
                             <div className="flex items-center gap-2 text-slate-400 text-sm">
                                 <UserIcon className="size-4" />
                                 Mentors met
                             </div>
-                            <p className="text-3xl font-semibold text-white mt-2">4</p>
+                            <p className="text-3xl font-semibold text-white mt-2">{mentorsMetCount}</p>
                         </div>
                     </div>
 
@@ -119,29 +127,30 @@ export default function StudentDashboard() {
                         </div>
 
                         <div className="mt-5 space-y-3">
-                            {filtered.length === 0 && (
+                            {loading && <p className="text-slate-500 text-sm py-6">Loading sessions...</p>}
+                            {!loading && filtered.length === 0 && (
                                 <p className="text-slate-500 text-sm py-10 text-center">No sessions here yet.</p>
                             )}
                             {filtered.map((session, index) => (
                                 <div
-                                    key={index}
+                                    key={session.id}
                                     className="flex items-center justify-between border border-slate-800 rounded-xl p-4 bg-slate-950/60"
                                 >
                                     <div className="flex items-center gap-4">
-                                        <div className={`size-10 rounded-full ${session.color} flex items-center justify-center text-white font-semibold text-sm flex-shrink-0`}>
-                                            {session.initials}
+                                        <div className={`size-10 rounded-full ${avatarColors[index % avatarColors.length]} flex items-center justify-center text-white font-semibold text-sm flex-shrink-0`}>
+                                            {getInitials(session.mentorName)}
                                         </div>
                                         <div>
                                             <p className="text-white font-medium text-sm">{session.topic}</p>
-                                            <p className="text-slate-500 text-xs">with {session.mentor} · {session.date}</p>
+                                            <p className="text-slate-500 text-xs">with {session.mentorName} · {session.day}, {session.date} · {session.time}</p>
                                         </div>
                                     </div>
 
                                     <div className="flex items-center gap-3">
-                                        <span className={`text-xs px-2.5 py-1 rounded-full border ${statusStyles[session.status]}`}>
+                                        <span className={`text-xs px-2.5 py-1 rounded-full border capitalize ${statusStyles[session.status]}`}>
                                             {session.status}
                                         </span>
-                                        {session.status === "Confirmed" && (
+                                        {session.status === "confirmed" && (
                                             <button className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-pink-600 hover:bg-pink-700 text-white transition">
                                                 <VideoIcon className="size-3.5" />
                                                 Join

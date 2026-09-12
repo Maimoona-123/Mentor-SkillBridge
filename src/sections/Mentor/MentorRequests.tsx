@@ -1,41 +1,63 @@
 'use client'
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CheckIcon, XIcon } from "lucide-react";
+import { collection, query, where, onSnapshot, doc, updateDoc } from "firebase/firestore";
 import MentorSidebar from "../../components/MentorSidebar";
+import { useAuth } from "../../context/AuthContext";
+import { db } from "../../firebase";
 
-const initialRequests = [
-    {
-        student: "Danish Raza",
-        topic: "Stuck on React useEffect cleanup",
-        date: "9 Sep, 5:00 PM",
-        initials: "DR",
-        color: "bg-sky-600",
-    },
-    {
-        student: "Fatima Noor",
-        topic: "Need help debugging a Firebase query",
-        date: "11 Sep, 3:00 PM",
-        initials: "FN",
-        color: "bg-rose-600",
-    },
-    {
-        student: "Zain Malik",
-        topic: "Portfolio review before applying to jobs",
-        date: "13 Sep, 6:00 PM",
-        initials: "ZM",
-        color: "bg-amber-600",
-    },
-];
+const avatarColors = ["bg-sky-600", "bg-rose-600", "bg-amber-600", "bg-violet-600", "bg-emerald-600"];
+
+const getInitials = (name: string) =>
+    name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+
+interface Booking {
+    id: string;
+    studentName: string;
+    topic: string;
+    day: string;
+    date: string;
+    time: string;
+}
 
 export default function MentorRequests() {
-    const [requests, setRequests] = useState(initialRequests);
+    const { currentUser } = useAuth();
+    const [requests, setRequests] = useState<Booking[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [processingId, setProcessingId] = useState<string | null>(null);
 
-    const handleAccept = (student: string) => {
-        setRequests((prev) => prev.filter((r) => r.student !== student));
+    useEffect(() => {
+        if (!currentUser) return;
+        const q = query(
+            collection(db, "bookings"),
+            where("mentorId", "==", currentUser.uid),
+            where("status", "==", "pending")
+        );
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const results: Booking[] = snapshot.docs.map((d) => ({
+                id: d.id,
+                studentName: d.data().studentName || "Unknown student",
+                topic: d.data().topic || "",
+                day: d.data().day || "",
+                date: d.data().date || "",
+                time: d.data().time || "",
+            }));
+            setRequests(results);
+            setLoading(false);
+        });
+        return () => unsubscribe();
+    }, [currentUser]);
+
+    const handleAccept = async (id: string) => {
+        setProcessingId(id);
+        await updateDoc(doc(db, "bookings", id), { status: "confirmed" });
+        setProcessingId(null);
     };
 
-    const handleDecline = (student: string) => {
-        setRequests((prev) => prev.filter((r) => r.student !== student));
+    const handleDecline = async (id: string) => {
+        setProcessingId(id);
+        await updateDoc(doc(db, "bookings", id), { status: "declined" });
+        setProcessingId(null);
     };
 
     return (
@@ -50,38 +72,43 @@ export default function MentorRequests() {
                     <p className="text-slate-400 mt-1 text-sm">Students waiting for you to accept or decline a session.</p>
 
                     <div className="mt-8 space-y-3">
-                        {requests.length === 0 && (
+                        {loading && <p className="text-slate-500 text-sm">Loading requests...</p>}
+
+                        {!loading && requests.length === 0 && (
                             <p className="text-slate-500 text-sm py-10 text-center border border-slate-800 rounded-xl bg-slate-950/40">
                                 No pending requests right now.
                             </p>
                         )}
-                        {requests.map((req) => (
+
+                        {requests.map((req, index) => (
                             <div
-                                key={req.student}
+                                key={req.id}
                                 className="flex items-center justify-between border border-slate-800 rounded-xl p-5 bg-slate-950/60"
                             >
                                 <div className="flex items-center gap-4">
-                                    <div className={`size-11 rounded-full ${req.color} flex items-center justify-center text-white font-semibold text-sm flex-shrink-0`}>
-                                        {req.initials}
+                                    <div className={`size-11 rounded-full ${avatarColors[index % avatarColors.length]} flex items-center justify-center text-white font-semibold text-sm flex-shrink-0`}>
+                                        {getInitials(req.studentName)}
                                     </div>
                                     <div>
-                                        <p className="text-white font-medium text-sm">{req.student}</p>
+                                        <p className="text-white font-medium text-sm">{req.studentName}</p>
                                         <p className="text-slate-500 text-sm mt-0.5">{req.topic}</p>
-                                        <p className="text-slate-600 text-xs mt-1">{req.date}</p>
+                                        <p className="text-slate-600 text-xs mt-1">{req.day}, {req.date} · {req.time}</p>
                                     </div>
                                 </div>
 
                                 <div className="flex items-center gap-2">
                                     <button
-                                        onClick={() => handleDecline(req.student)}
-                                        className="flex items-center gap-1.5 text-sm px-4 py-2 rounded-lg border border-slate-700 hover:bg-slate-800 transition"
+                                        onClick={() => handleDecline(req.id)}
+                                        disabled={processingId === req.id}
+                                        className="flex items-center gap-1.5 text-sm px-4 py-2 rounded-lg border border-slate-700 hover:bg-slate-800 disabled:opacity-50 transition"
                                     >
                                         <XIcon className="size-4" />
                                         Decline
                                     </button>
                                     <button
-                                        onClick={() => handleAccept(req.student)}
-                                        className="flex items-center gap-1.5 text-sm px-4 py-2 rounded-lg bg-pink-600 hover:bg-pink-700 text-white transition"
+                                        onClick={() => handleAccept(req.id)}
+                                        disabled={processingId === req.id}
+                                        className="flex items-center gap-1.5 text-sm px-4 py-2 rounded-lg bg-pink-600 hover:bg-pink-700 disabled:opacity-50 text-white transition"
                                     >
                                         <CheckIcon className="size-4" />
                                         Accept
