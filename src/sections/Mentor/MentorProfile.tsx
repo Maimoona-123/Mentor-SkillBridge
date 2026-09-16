@@ -13,20 +13,17 @@ interface MentorData {
     currentRole: string;
     bio: string;
     skills: string[];
+    availability: { id: string; day: string; time: string }[];
+    ratingSum: number;
+    ratingCount: number;
 }
-
-const availableSlots = [
-    { day: "Mon", date: "8 Sep", times: ["4:00 PM", "6:30 PM"] },
-    { day: "Wed", date: "10 Sep", times: ["5:00 PM"] },
-    { day: "Fri", date: "12 Sep", times: ["3:00 PM", "7:00 PM"] },
-];
 
 export default function MentorProfile() {
     const { id } = useParams();
     const navigate = useNavigate();
     const [mentor, setMentor] = useState<MentorData | null>(null);
     const [loading, setLoading] = useState(true);
-    const [selectedSlot, setSelectedSlot] = useState<{ day: string; date: string; time: string } | null>(null);
+    const [selectedSlot, setSelectedSlot] = useState<{ day: string; time: string } | null>(null);
 
     useEffect(() => {
         const fetchMentor = async () => {
@@ -43,6 +40,9 @@ export default function MentorProfile() {
                         currentRole: data.currentRole || "Mentor",
                         bio: data.bio || "This mentor hasn't added a bio yet.",
                         skills: data.skills || [],
+                        availability: data.availability || [],
+                        ratingSum: data.ratingSum || 0,
+                        ratingCount: data.ratingCount || 0,
                     });
                 }
             } catch (err) {
@@ -100,8 +100,10 @@ export default function MentorProfile() {
                             <p className="text-slate-400">{mentor.currentRole}</p>
                             <div className="flex items-center gap-1.5 mt-1.5 text-sm">
                                 <StarIcon className="size-4 fill-amber-400 text-amber-400" />
-                                <span className="text-white">New</span>
-                                <span className="text-slate-600">· 0 sessions completed</span>
+                                <span className="text-white">
+                                    {mentor.ratingCount > 0 ? (mentor.ratingSum / mentor.ratingCount).toFixed(1) : "New"}
+                                </span>
+                                <span className="text-slate-600">· {mentor.ratingCount} session{mentor.ratingCount === 1 ? "" : "s"} rated</span>
                             </div>
                         </div>
                     </div>
@@ -129,30 +131,36 @@ export default function MentorProfile() {
                         </div>
 
                         <div className="mt-5 space-y-4">
-                            {availableSlots.map((slot) => (
-                                <div key={slot.date}>
-                                    <p className="text-sm text-slate-400">{slot.day}, {slot.date}</p>
-                                    <div className="flex flex-wrap gap-2 mt-2">
-                                        {slot.times.map((time) => {
-                                            const isSelected = selectedSlot?.date === slot.date && selectedSlot?.time === time;
-                                            return (
-                                                <button
-                                                    key={time}
-                                                    onClick={() => setSelectedSlot({ day: slot.day, date: slot.date, time })}
-                                                    className={`flex items-center gap-1.5 text-xs px-3 py-2 rounded-lg border transition ${
-                                                        isSelected
-                                                            ? "bg-pink-600 border-pink-600 text-white"
-                                                            : "border-slate-700 hover:border-pink-500 hover:text-white"
-                                                    }`}
-                                                >
-                                                    <ClockIcon className="size-3.5" />
-                                                    {time}
-                                                </button>
-                                            );
-                                        })}
+                            {mentor.availability.length === 0 && (
+                                <p className="text-slate-500 text-sm">This mentor hasn't added any time slots yet.</p>
+                            )}
+                            {Array.from(new Set(mentor.availability.map((s) => s.day))).map((day) => {
+                                const daySlots = mentor.availability.filter((s) => s.day === day);
+                                return (
+                                    <div key={day}>
+                                        <p className="text-sm text-slate-400">{day}</p>
+                                        <div className="flex flex-wrap gap-2 mt-2">
+                                            {daySlots.map((slot) => {
+                                                const isSelected = selectedSlot?.day === day && selectedSlot?.time === slot.time;
+                                                return (
+                                                    <button
+                                                        key={slot.id}
+                                                        onClick={() => setSelectedSlot({ day, time: slot.time })}
+                                                        className={`flex items-center gap-1.5 text-xs px-3 py-2 rounded-lg border transition ${
+                                                            isSelected
+                                                                ? "bg-pink-600 border-pink-600 text-white"
+                                                                : "border-slate-700 hover:border-pink-500 hover:text-white"
+                                                        }`}
+                                                    >
+                                                        <ClockIcon className="size-3.5" />
+                                                        {slot.time}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
 
                         <button

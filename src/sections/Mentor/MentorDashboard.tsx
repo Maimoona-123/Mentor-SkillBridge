@@ -7,8 +7,10 @@ import {
     CheckIcon,
     XIcon,
     ClockIcon,
+    VideoIcon,
 } from "lucide-react";
-import { collection, query, where, onSnapshot, doc, updateDoc } from "firebase/firestore";
+import { Link } from "react-router-dom";
+import { collection, query, where, onSnapshot, doc, updateDoc, getDoc } from "firebase/firestore";
 import MentorSidebar from "../../components/MentorSidebar";
 import { useAuth } from "../../context/AuthContext";
 import { db } from "../../firebase";
@@ -23,7 +25,6 @@ interface Booking {
     studentName: string;
     topic: string;
     day: string;
-    date: string;
     time: string;
     status: string;
 }
@@ -33,8 +34,23 @@ export default function MentorDashboard() {
     const [bookings, setBookings] = useState<Booking[]>([]);
     const [loading, setLoading] = useState(true);
     const [processingId, setProcessingId] = useState<string | null>(null);
+    const [avgRating, setAvgRating] = useState<number | null>(null);
 
     const firstName = currentUser?.name?.split(" ")[0] || "there";
+
+    useEffect(() => {
+        if (!currentUser) return;
+        const loadRating = async () => {
+            const snap = await getDoc(doc(db, "users", currentUser.uid));
+            if (snap.exists()) {
+                const data = snap.data();
+                if (data.ratingCount > 0) {
+                    setAvgRating(data.ratingSum / data.ratingCount);
+                }
+            }
+        };
+        loadRating();
+    }, [currentUser]);
 
     useEffect(() => {
         if (!currentUser) return;
@@ -45,7 +61,6 @@ export default function MentorDashboard() {
                 studentName: d.data().studentName || "Unknown student",
                 topic: d.data().topic || "",
                 day: d.data().day || "",
-                date: d.data().date || "",
                 time: d.data().time || "",
                 status: d.data().status || "pending",
             }));
@@ -68,6 +83,12 @@ export default function MentorDashboard() {
     const handleDecline = async (id: string) => {
         setProcessingId(id);
         await updateDoc(doc(db, "bookings", id), { status: "declined" });
+        setProcessingId(null);
+    };
+
+    const handleComplete = async (id: string) => {
+        setProcessingId(id);
+        await updateDoc(doc(db, "bookings", id), { status: "completed" });
         setProcessingId(null);
     };
 
@@ -95,7 +116,7 @@ export default function MentorDashboard() {
                                 <StarIcon className="size-4" />
                                 Average rating
                             </div>
-                            <p className="text-3xl font-semibold text-white mt-2">—</p>
+                            <p className="text-3xl font-semibold text-white mt-2">{avgRating ? avgRating.toFixed(1) : "New"}</p>
                         </div>
                         <div className="border border-slate-800 rounded-xl p-5 bg-slate-950/60">
                             <div className="flex items-center gap-2 text-slate-400 text-sm">
@@ -129,7 +150,7 @@ export default function MentorDashboard() {
                                         <div>
                                             <p className="text-white font-medium text-sm">{req.studentName}</p>
                                             <p className="text-slate-500 text-xs">{req.topic}</p>
-                                            <p className="text-slate-600 text-xs mt-0.5">{req.day}, {req.date} · {req.time}</p>
+                                            <p className="text-slate-600 text-xs mt-0.5">{req.day} · {req.time}</p>
                                         </div>
                                     </div>
 
@@ -176,12 +197,28 @@ export default function MentorDashboard() {
                                         </div>
                                         <div>
                                             <p className="text-white font-medium text-sm">{session.topic}</p>
-                                            <p className="text-slate-500 text-xs">with {session.studentName} · {session.day}, {session.date} · {session.time}</p>
+                                            <p className="text-slate-500 text-xs">with {session.studentName} · {session.day} · {session.time}</p>
                                         </div>
                                     </div>
-                                    <span className="text-xs px-2.5 py-1 rounded-full border bg-emerald-500/10 text-emerald-400 border-emerald-500/30">
-                                        Confirmed
-                                    </span>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-xs px-2.5 py-1 rounded-full border bg-emerald-500/10 text-emerald-400 border-emerald-500/30">
+                                            Confirmed
+                                        </span>
+                                        <Link
+                                            to={`/call/${session.id}`}
+                                            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-pink-600 hover:bg-pink-700 text-white transition"
+                                        >
+                                            <VideoIcon className="size-3.5" />
+                                            Join
+                                        </Link>
+                                        <button
+                                            onClick={() => handleComplete(session.id)}
+                                            disabled={processingId === session.id}
+                                            className="text-xs px-3 py-1.5 rounded-lg border border-slate-700 hover:bg-slate-800 disabled:opacity-50 transition"
+                                        >
+                                            Mark as completed
+                                        </button>
+                                    </div>
                                 </div>
                             ))}
                         </div>

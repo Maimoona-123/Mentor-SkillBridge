@@ -16,6 +16,8 @@ interface Mentor {
     name: string;
     currentRole: string;
     skills: string[];
+    ratingSum: number;
+    ratingCount: number;
 }
 
 export default function BrowseMentors() {
@@ -32,6 +34,8 @@ export default function BrowseMentors() {
                 name: doc.data().name || "Unnamed Mentor",
                 currentRole: doc.data().currentRole || "Mentor",
                 skills: doc.data().skills || [],
+                ratingSum: doc.data().ratingSum || 0,
+                ratingCount: doc.data().ratingCount || 0,
             }));
             setMentors(results);
             setLoading(false);
@@ -129,7 +133,7 @@ export default function BrowseMentors() {
                             <div className="flex items-center justify-between mt-5">
                                 <div className="flex items-center gap-1 text-sm text-slate-400">
                                     <StarIcon className="size-4 fill-amber-400 text-amber-400" />
-                                    <span>New mentor</span>
+                                    <span>{mentor.ratingCount > 0 ? (mentor.ratingSum / mentor.ratingCount).toFixed(1) : "New mentor"}</span>
                                 </div>
                             </div>
 

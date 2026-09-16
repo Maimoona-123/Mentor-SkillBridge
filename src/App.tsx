@@ -18,6 +18,7 @@ import MentorAvailability from "./sections/Mentor/MentorAvailability";
 import MentorProfileEdit from "./sections/Mentor/MentorProfileEdit";
 import MentorSettings from "./sections/Mentor/MentorSettings";
 import StudentSessions from "./sections/Student/Studentsessions";
+import VideoCall from "./sections/VideoCall/VideoCall";
 
 export default function App() {
     return (
@@ -42,6 +43,8 @@ export default function App() {
                 <Route path="/mentor-dashboard/settings" element={<MentorSettings />} />
 
                 <Route path="/dashboard/sessions" element={<StudentSessions />} />
+
+                <Route path="/call/:bookingId" element={<VideoCall />} />
             </Routes>
             <Footer />
         </>

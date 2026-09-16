@@ -10,7 +10,7 @@ interface BookingState {
     mentorId: string;
     mentorName: string;
     mentorRole: string;
-    slot: { day: string; date: string; time: string };
+    slot: { day: string; time: string };
 }
 
 const getInitials = (name: string) =>
@@ -45,7 +45,6 @@ export default function BookingConfirmation() {
                 mentorName: state.mentorName,
                 topic: message || "General mentorship session",
                 day: state.slot.day,
-                date: state.slot.date,
                 time: state.slot.time,
                 status: "pending",
                 createdAt: serverTimestamp(),
@@ -102,7 +101,7 @@ export default function BookingConfirmation() {
                 <div className="flex items-center gap-6 mt-4 text-sm text-slate-400">
                     <div className="flex items-center gap-1.5">
                         <CalendarIcon className="size-4" />
-                        {state.slot.day}, {state.slot.date}
+                        {state.slot.day}
                     </div>
                     <div className="flex items-center gap-1.5">
                         <ClockIcon className="size-4" />

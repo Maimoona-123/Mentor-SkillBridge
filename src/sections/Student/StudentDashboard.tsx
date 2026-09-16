@@ -17,7 +17,6 @@ interface Booking {
     mentorName: string;
     topic: string;
     day: string;
-    date: string;
     time: string;
     status: string;
 }
@@ -46,7 +45,6 @@ export default function StudentDashboard() {
                 mentorName: d.data().mentorName || "Unknown mentor",
                 topic: d.data().topic || "",
                 day: d.data().day || "",
-                date: d.data().date || "",
                 time: d.data().time || "",
                 status: d.data().status || "pending",
             }));
@@ -142,7 +140,7 @@ export default function StudentDashboard() {
                                         </div>
                                         <div>
                                             <p className="text-white font-medium text-sm">{session.topic}</p>
-                                            <p className="text-slate-500 text-xs">with {session.mentorName} · {session.day}, {session.date} · {session.time}</p>
+                                            <p className="text-slate-500 text-xs">with {session.mentorName} · {session.day} · {session.time}</p>
                                         </div>
                                     </div>
 
@@ -151,10 +149,13 @@ export default function StudentDashboard() {
                                             {session.status}
                                         </span>
                                         {session.status === "confirmed" && (
-                                            <button className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-pink-600 hover:bg-pink-700 text-white transition">
+                                            <Link
+                                                to={`/call/${session.id}`}
+                                                className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-pink-600 hover:bg-pink-700 text-white transition"
+                                            >
                                                 <VideoIcon className="size-3.5" />
                                                 Join
-                                            </button>
+                                            </Link>
                                         )}
                                     </div>
                                 </div>

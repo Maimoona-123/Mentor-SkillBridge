@@ -1,7 +1,10 @@
 'use client'
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PlusIcon, TrashIcon } from "lucide-react";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
 import MentorSidebar from "../../components/MentorSidebar";
+import { useAuth } from "../../context/AuthContext";
+import { db } from "../../firebase";
 
 const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
@@ -12,25 +15,57 @@ interface Slot {
 }
 
 export default function MentorAvailability() {
-    const [slots, setSlots] = useState<Slot[]>([
-        { id: "1", day: "Monday", time: "4:00 PM" },
-        { id: "2", day: "Monday", time: "6:30 PM" },
-        { id: "3", day: "Wednesday", time: "5:00 PM" },
-        { id: "4", day: "Friday", time: "3:00 PM" },
-    ]);
-
+    const { currentUser } = useAuth();
+    const [slots, setSlots] = useState<Slot[]>([]);
     const [newDay, setNewDay] = useState("Monday");
     const [newTime, setNewTime] = useState("");
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+
+    useEffect(() => {
+        const loadSlots = async () => {
+            if (!currentUser) return;
+            const snap = await getDoc(doc(db, "users", currentUser.uid));
+            if (snap.exists()) {
+                const data = snap.data();
+                setSlots(data.availability || []);
+            }
+            setLoading(false);
+        };
+        loadSlots();
+    }, [currentUser]);
+
+    const saveSlots = async (updatedSlots: Slot[]) => {
+        if (!currentUser) return;
+        setSaving(true);
+        await updateDoc(doc(db, "users", currentUser.uid), { availability: updatedSlots });
+        setSaving(false);
+    };
 
     const addSlot = () => {
         if (!newTime.trim()) return;
-        setSlots((prev) => [...prev, { id: Date.now().toString(), day: newDay, time: newTime }]);
+        const updated = [...slots, { id: Date.now().toString(), day: newDay, time: newTime }];
+        setSlots(updated);
+        saveSlots(updated);
         setNewTime("");
     };
 
     const removeSlot = (id: string) => {
-        setSlots((prev) => prev.filter((s) => s.id !== id));
+        const updated = slots.filter((s) => s.id !== id);
+        setSlots(updated);
+        saveSlots(updated);
     };
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-black text-slate-300 pt-24 flex">
+                <MentorSidebar />
+                <main className="flex-1 md:ml-64 px-6 md:px-10 py-8">
+                    <p className="text-slate-500 text-sm">Loading your availability...</p>
+                </main>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-black text-slate-300 pt-24 flex">
@@ -40,10 +75,14 @@ export default function MentorAvailability() {
                 <div className="absolute top-0 -z-10 left-1/3 size-96 bg-pink-600/20 blur-[150px] rounded-full" />
 
                 <div className="max-w-2xl">
-                    <h1 className="text-2xl font-semibold text-white">My availability</h1>
-                    <p className="text-slate-400 mt-1 text-sm">Add the times you're free to take a session. Students book from these slots.</p>
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h1 className="text-2xl font-semibold text-white">My availability</h1>
+                            <p className="text-slate-400 mt-1 text-sm">Add the times you're free. Students book directly from these slots.</p>
+                        </div>
+                        {saving && <span className="text-xs text-slate-500">Saving...</span>}
+                    </div>
 
-                    {/* Add new slot */}
                     <div className="mt-8 border border-slate-800 rounded-xl p-5 bg-slate-950/60">
                         <p className="text-sm font-medium text-white mb-3">Add a time slot</p>
                         <div className="flex flex-col sm:flex-row gap-3">
@@ -73,7 +112,6 @@ export default function MentorAvailability() {
                         </div>
                     </div>
 
-                    {/* Grouped slots by day */}
                     <div className="mt-8 space-y-5">
                         {days.map((day) => {
                             const daySlots = slots.filter((s) => s.day === day);

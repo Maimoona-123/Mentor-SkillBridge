@@ -16,7 +16,6 @@ interface Booking {
     studentName: string;
     topic: string;
     day: string;
-    date: string;
     time: string;
 }
 
@@ -39,7 +38,6 @@ export default function MentorRequests() {
                 studentName: d.data().studentName || "Unknown student",
                 topic: d.data().topic || "",
                 day: d.data().day || "",
-                date: d.data().date || "",
                 time: d.data().time || "",
             }));
             setRequests(results);
@@ -92,7 +90,7 @@ export default function MentorRequests() {
                                     <div>
                                         <p className="text-white font-medium text-sm">{req.studentName}</p>
                                         <p className="text-slate-500 text-sm mt-0.5">{req.topic}</p>
-                                        <p className="text-slate-600 text-xs mt-1">{req.day}, {req.date} · {req.time}</p>
+                                        <p className="text-slate-600 text-xs mt-1">{req.day} · {req.time}</p>
                                     </div>
                                 </div>
 
