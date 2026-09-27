@@ -1,4 +1,4 @@
-'use client'
+    'use client'
 import {
     LayoutDashboardIcon,
     InboxIcon,
@@ -6,6 +6,7 @@ import {
     UserIcon,
     SettingsIcon,
     LogOutIcon,
+    BookOpenIcon,
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
@@ -14,6 +15,7 @@ const sidebarLinks = [
     { name: "Overview", path: "/mentor-dashboard", icon: LayoutDashboardIcon },
     { name: "Requests", path: "/mentor-dashboard/requests", icon: InboxIcon },
     { name: "My Availability", path: "/mentor-dashboard/availability", icon: CalendarClockIcon },
+    { name: "My Courses", path: "/mentor-dashboard/courses", icon: BookOpenIcon },
     { name: "Profile", path: "/mentor-dashboard/profile", icon: UserIcon },
     { name: "Settings", path: "/mentor-dashboard/settings", icon: SettingsIcon },
 ];
