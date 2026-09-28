@@ -14,6 +14,14 @@ interface ChatMessage {
     text: string;
 }
 
+const suggestedQuestions = [
+    "How do I book a session with a mentor?",
+    "Is SkillBridge really free?",
+    "How do course certificates work?",
+    "How do I become a mentor?",
+    "What if I miss my session?",
+];
+
 export default function ChatbotWidget() {
     const { currentUser } = useAuth();
     const [isOpen, setIsOpen] = useState(false);
@@ -63,9 +71,9 @@ export default function ChatbotWidget() {
         greet();
     }, [isOpen, greeted, currentUser]);
 
-    const handleSend = async () => {
-        if (!input.trim() || sending) return;
-        const userMessage = input.trim();
+    const handleSend = async (overrideText?: string) => {
+        const userMessage = (overrideText ?? input).trim();
+        if (!userMessage || sending) return;
         setInput("");
         setMessages((prev) => [...prev, { role: "user", text: userMessage }]);
         setSending(true);
@@ -144,6 +152,19 @@ export default function ChatbotWidget() {
                                 </div>
                             </div>
                         )}
+                        {messages.length === 1 && !sending && (
+                            <div className="flex flex-wrap gap-2 pt-1">
+                                {suggestedQuestions.map((q) => (
+                                    <button
+                                        key={q}
+                                        onClick={() => handleSend(q)}
+                                        className="text-xs px-3 py-2 rounded-full border border-slate-700 text-slate-300 hover:border-pink-500 hover:text-white transition text-left"
+                                    >
+                                        {q}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
                         <div ref={messagesEndRef} />
                     </div>
 
@@ -157,7 +178,7 @@ export default function ChatbotWidget() {
                             className="flex-1 px-3.5 py-2.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-sm placeholder:text-slate-600 outline-none focus:border-pink-500 transition"
                         />
                         <button
-                            onClick={handleSend}
+                            onClick={() => handleSend()}
                             disabled={sending || !input.trim()}
                             className="size-10 rounded-lg bg-pink-600 hover:bg-pink-700 disabled:opacity-40 flex items-center justify-center transition flex-shrink-0"
                         >

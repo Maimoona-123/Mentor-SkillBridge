@@ -28,6 +28,7 @@ import CreateCourse from "./sections/Mentor/Createcourse";
 import CourseStudents from "./sections/Mentor/CoursesStuents";
 import HowItWorks from "./sections/Howitworks";
 import BecomeMentor from "./sections/Becomementor";
+import Roadmaps from "./sections/RoadMaps";
 
 export default function App() {
     return (
@@ -63,6 +64,8 @@ export default function App() {
                     path="/how-it-works"
                     element={<HowItWorks />}
                 />
+
+                <Route path="/roadmaps" element={<Roadmaps />} />
 
                 {/* Student Routes */}
                 <Route
